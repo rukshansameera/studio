@@ -22,6 +22,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
@@ -31,21 +35,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signInWithGoogle = async () => {
+    if (!auth) {
+      toast({
+        title: "Firebase Not Configured",
+        description: "Please add your Firebase credentials to the .env.local file to enable authentication.",
+        variant: "destructive",
+      });
+      return;
+    }
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
       router.push('/profile');
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error signing in with Google", error);
-      toast({
-        title: "Authentication Error",
-        description: "Failed to sign in with Google. Please try again.",
-        variant: "destructive",
-      });
+      if (error.code && (error.code === 'auth/invalid-api-key' || error.code === 'auth/api-key-not-valid')) {
+         toast({
+            title: "Authentication Error",
+            description: "Your Firebase API key is invalid. Please check your .env.local file.",
+            variant: "destructive",
+        });
+      } else {
+        toast({
+            title: "Authentication Error",
+            description: "Failed to sign in with Google. Please try again.",
+            variant: "destructive",
+        });
+      }
     }
   };
 
   const signOut = async () => {
+    if (!auth) {
+       toast({
+        title: "Firebase Not Configured",
+        description: "Cannot sign out as Firebase is not configured.",
+        variant: "destructive",
+      });
+      return;
+    }
     try {
       await firebaseSignOut(auth);
       router.push('/login');
