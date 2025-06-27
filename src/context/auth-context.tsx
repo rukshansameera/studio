@@ -61,6 +61,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             description: "Google Sign-In is not enabled for this Firebase project. Please enable it in the Firebase console.",
             variant: "destructive",
         });
+      } else if (error.code === 'auth/unauthorized-domain') {
+        toast({
+            title: "Configuration Error",
+            description: "This domain is not authorized. Please add it in your Firebase project's authentication settings.",
+            variant: "destructive",
+        });
       } else {
         toast({
             title: "Authentication Error",
